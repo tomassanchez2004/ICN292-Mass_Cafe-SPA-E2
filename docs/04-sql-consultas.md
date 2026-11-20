@@ -242,7 +242,7 @@ El procedimiento de ejecución es el siguiente:
 
 1. Ejecutar `schema.sql` para crear la base de datos y sus 14 tablas.
 2. Ejecutar `seed.sql` para incorporar los registros de prueba.
-3. Ejecutar `consultas_negocio.sql` para obtener los resultados de las seis consultas de negocio.
+3. Ejecutar `consultas.sql` para obtener los resultados de las seis consultas de negocio.
 
 La validación se realizó mediante la revisión de los mensajes de ejecución de MySQL Workbench y los resultados obtenidos en cada consulta.
 
