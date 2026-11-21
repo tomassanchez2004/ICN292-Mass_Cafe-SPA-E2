@@ -1,205 +1,109 @@
-# 04 — Implementación SQL y consultas de negocio
+# SQL y consultas de negocio
 
-## 1. Introducción
+Motor: **MySQL 8.0 o superior**.
 
-En esta sección se presenta la implementación de la base de datos del sistema de información de **InventaFood – Mass Cafe SPA**, desarrollada en MySQL Workbench.
+## 1. Archivos y orden de ejecución
 
-El objetivo de esta implementación es disponer de una estructura de datos que permita gestionar la información relacionada con productos, ingredientes, inventario, ventas, compras, proveedores, usuarios y alertas de reposición.
-
-La solución se compone de tres archivos SQL:
-
-- `schema.sql`: creación de la base de datos y sus tablas.
-- `seed.sql`: incorporación de datos de prueba para poblar las tablas.
-- `consultas.sql`: consultas SQL orientadas a obtener información útil para la gestión del negocio.
-
-Los scripts fueron ejecutados y probados en MySQL Workbench.
-
-## 2. Creación de la base de datos (schema.sql)
-
-El archivo `schema.sql` contiene las instrucciones necesarias para crear la base de datos `inventafood` y sus respectivas tablas.
-
-La estructura está basada en las 14 entidades definidas en el modelo entidad-relación del proyecto.
-
-### 2.1 Entidades implementadas
-
-| N.º | Tabla | Descripción |
+| Orden | Archivo | Qué hace |
 |---|---|---|
-| 1 | Area | Almacena las áreas de trabajo del negocio. |
-| 2 | Producto | Registra los productos ofrecidos por la cafetería. |
-| 3 | Ingrediente | Almacena los ingredientes y sus unidades base. |
-| 4 | Usuario | Registra los trabajadores y sus áreas y roles. |
-| 5 | Configuracion_Producto | Define los ingredientes y cantidades de las recetas. |
-| 6 | Venta | Registra las ventas realizadas. |
-| 7 | Detalle_Venta | Almacena los productos y cantidades de cada venta. |
-| 8 | Detalle_Venta_Ingrediente | Registra los ingredientes utilizados en las ventas. |
-| 9 | Item_Inventario | Gestiona el stock de productos e ingredientes. |
-| 10 | Movimiento_Inventario | Registra entradas, salidas, mermas y ajustes. |
-| 11 | Proveedor | Almacena la información de los proveedores. |
-| 12 | Compra | Registra las compras realizadas a proveedores. |
-| 13 | Detalle_Compra | Detalla los artículos y cantidades adquiridas. |
-| 14 | Alerta_Reposicion | Registra las alertas de reposición de inventario. |
+| 1 | `schema.sql` | Crea la base `inventafood` y sus 14 tablas, con claves primarias, claves foráneas y restricciones (`CHECK`, `UNIQUE`). |
+| 2 | `seed.sql` | Carga datos sintéticos coherentes con Mass Café SPA (productos, ingredientes, recetas, usuarios, ventas, compras, movimientos y alertas de noviembre de 2026). |
+| 3 | `consultas.sql` | Ejecuta las 6 consultas de negocio descritas en la sección 3. |
+| 4 | `registrar_venta.sql` | Crea el procedimiento `registrar_venta` (RF03) y ejecuta una demostración. **Modifica el stock**, por lo que se ejecuta después de las consultas. |
 
-### 2.2 Claves y restricciones
+En MySQL Workbench: abrir cada archivo (File → Open SQL Script) y ejecutarlo completo con el botón del rayo, en el orden indicado. Si la base ya existía, ejecutar antes `DROP DATABASE IF EXISTS inventafood;`.
 
-Para mantener la integridad de la información se implementaron las siguientes características:
+Los resultados de la sección 3 corresponden a la base recién cargada con `schema.sql` y `seed.sql`.
 
-- **PRIMARY KEY:** identifica de manera única cada registro de las tablas.
-- **FOREIGN KEY:** establece las relaciones entre las entidades y asegura la integridad referencial.
-- **AUTO_INCREMENT:** permite generar automáticamente los identificadores.
-- **NOT NULL:** establece que determinados atributos deben contener información.
-- **UNIQUE:** evita la duplicación de valores en atributos como correos electrónicos y nombres de áreas.
-- **CHECK:** establece condiciones para validar los datos ingresados.
+## 2. Relación con los requerimientos
 
-También se definieron acciones `ON UPDATE` y `ON DELETE` para controlar las modificaciones y eliminaciones de registros relacionados.
+| Consulta / script | Requerimiento |
+|---|---|
+| Consulta 1: artículos en o bajo el stock mínimo | RF04, RF05, RF06, RF07 |
+| Consulta 2: consumo de ingredientes por ventas | RF03 |
+| Consulta 3: compras por artículo | RF02 |
+| Consulta 4: mermas registradas | RF08 |
+| Consulta 5: productos más vendidos | RF03 (relación venta–producto) |
+| Consulta 6: historial de movimientos de noviembre | RF11 |
+| `registrar_venta.sql` | RF03, RNF01, RNF02, RNF05 |
 
-Un caso particular es la tabla `Item_Inventario`, que permite administrar tanto productos como ingredientes mediante dos claves foráneas opcionales. Se incorporó una restricción `CHECK` para asegurar que cada registro corresponda exclusivamente a uno de estos dos tipos de artículos.
+## 3. Consultas de negocio e interpretación
 
-### 2.3 Ejecución del esquema
+### Consulta 1: artículos en o bajo el stock mínimo
 
-El script se ejecutó en MySQL Workbench y se verificó la creación de las 14 tablas mediante la instrucción `SHOW TABLES`.
+Lista los productos e ingredientes con `stock_actual <= stock_minimo` (condición de RF06) y cuánto falta para llegar al mínimo.
 
-La base de datos quedó disponible bajo el nombre `inventafood`.
-
-
-## 3. Carga de datos (seed.sql)
-
-Una vez creada la estructura, se ejecutó `seed.sql`, encargado de incorporar datos sintéticos coherentes con el funcionamiento de Mass Cafe SPA.
-
-Los registros permiten representar situaciones habituales del negocio, como ventas, compras a proveedores, consumo de ingredientes, movimientos de inventario y generación de alertas de reposición.
-
-### 3.1 Registros incorporados
-
-La carga de datos considera los siguientes registros:
-
-| Tabla | Registros |
-|---|---:|
-| Area | 3 |
-| Producto | 8 |
-| Ingrediente | 16 |
-| Usuario | 5 |
-| Configuracion_Producto | 25 |
-| Venta | 5 |
-| Detalle_Venta | 8 |
-| Detalle_Venta_Ingrediente | 29 |
-| Item_Inventario | 17 |
-| Movimiento_Inventario | 45 |
-| Proveedor | 3 |
-| Compra | 3 |
-| Detalle_Compra | 12 |
-| Alerta_Reposicion | 3 |
-| **Total** | **182** |
-
-Los datos incluyen información de trabajadores, productos de cafetería, ingredientes utilizados en las preparaciones, cantidades disponibles en inventario y registros históricos de operaciones.
-
-Además, se incorporaron movimientos de entrada, salida y merma, permitiendo representar distintos escenarios de administración del inventario.
-
-La ejecución del archivo fue verificada mediante consultas de conteo de registros para cada tabla.
-
-## 4. Consultas de negocio (consultas.sql)
-
-Se desarrolló un conjunto de seis consultas SQL para obtener información relevante para la administración de InventaFood.
-
-Estas consultas permiten identificar necesidades de reposición, analizar el consumo de ingredientes, revisar compras, controlar mermas, identificar los productos más vendidos y consultar el historial de movimientos del inventario.
-
-### 4.1 Artículos que requieren reposición
-
-**Objetivo:** identificar los productos e ingredientes cuyo stock actual se encuentra en el nivel mínimo o por debajo de este, determinando cuánto falta para alcanzar el stock mínimo establecido.
-
-La consulta relaciona `Item_Inventario` con `Producto` e `Ingrediente`, utilizando `LEFT JOIN` para identificar el nombre del artículo correspondiente.
-
-**Resultado obtenido:**
-
-| Artículo | Stock actual | Stock mínimo | Cantidad faltante |
-|---|---:|---:|---:|
-| Café en grano | 1.306 g | 1.400 g | 94 g |
+| Artículo | Stock actual | Stock mínimo | Falta para el mínimo |
+|---|---|---|---|
+| Café en grano | 1306 g | 1400 g | 94 g |
 | Té chai | 38 g | 40 g | 2 g |
 
-**Interpretación:** se identificaron dos ingredientes que requieren reposición. El café en grano presenta una diferencia de 94 gramos respecto de su stock mínimo, mientras que el té chai requiere 2 gramos adicionales.
+**Interpretación:** dos ingredientes requieren reposición. El café en grano es el caso más importante, porque es la base de la mayoría de las bebidas (ver consulta 5) y además tuvo una merma de 50 g (consulta 4). Esta es la misma condición que usa la automatización n8n para generar alertas (ver `05-automatizacion-n8n.md`).
 
-Esta información permite priorizar las compras y evitar interrupciones en la preparación de productos.
+### Consulta 2: consumo de ingredientes asociado a ventas
 
-### 4.2 Ingredientes de mayor consumo por ventas
+Suma la cantidad utilizada de cada ingrediente en las ventas registradas (`Detalle_Venta_Ingrediente`).
 
-**Objetivo:** identificar los ingredientes que presentan mayor utilización en las preparaciones vendidas.
-
-La consulta relaciona `Detalle_Venta_Ingrediente`, `Ingrediente`, `Detalle_Venta` y `Venta`. Utiliza `SUM()` para calcular las cantidades totales utilizadas y `COUNT(DISTINCT)` para identificar en cuántas ventas se utilizó cada ingrediente.
-
-**Resultado obtenido:**
-
-Entre los principales resultados se encuentran:
-
-| Ingrediente | Cantidad utilizada | Ventas |
-|---|---:|---:|
-| Leche | 1.700 ml | 4 |
+| Ingrediente | Cantidad utilizada | Ventas en que se usó |
+|---|---|---|
+| Leche | 1700 ml | 4 |
 | Pollo | 160 g | 1 |
 | Harina | 150 g | 1 |
 | Agua | 150 ml | 1 |
 | Café en grano | 144 g | 3 |
+| Cacao | 60 g | 1 |
+| Mantequilla | 60 g | 1 |
+| Tomate | 40 g | 1 |
+| Lechuga | 30 g | 1 |
+| Chocolate en polvo | 25 g | 1 |
+| Té chai | 12 g | 1 |
+| Vaso desechable | 10 unidades | 4 |
+| Tapa de vaso | 7 unidades | 3 |
+| Pan | 4 unidades | 1 |
+| Huevo | 1,5 unidades | 1 |
 
-La consulta obtuvo 15 registros en total.
+**Interpretación:** la leche, el café en grano y los vasos son los insumos que aparecen en más ventas. Esta consulta muestra lo que Fudo no permite ver hoy: qué ingredientes se consumen en cada venta. Las unidades no son comparables entre sí (g, ml y unidades), por lo que el orden sirve para identificar los insumos de uso frecuente, no para comparar cantidades entre ingredientes distintos.
 
-**Interpretación:** la leche presenta el mayor consumo registrado, con 1.700 ml utilizados en cuatro ventas. El café en grano también destaca por su utilización en tres ventas.
+### Consulta 3: compras por artículo
 
-Esta información permite reconocer los ingredientes de mayor demanda y apoyar la planificación de inventario.
+Resume las compras registradas por artículo: número de compras y cantidad total comprada.
 
-### 4.3 Compras realizadas por artículo
+| Artículo | Tipo | Compras | Cantidad comprada |
+|---|---|---|---|
+| Leche | ingrediente | 1 | 2000 ml |
+| Café en grano | ingrediente | 1 | 500 g |
+| Harina | ingrediente | 1 | 500 g |
+| Pollo | ingrediente | 1 | 500 g |
+| Chocolate en polvo | ingrediente | 1 | 200 g |
+| Cacao | ingrediente | 1 | 200 g |
+| Mantequilla | ingrediente | 1 | 200 g |
+| Lechuga | ingrediente | 1 | 200 g |
+| Tomate | ingrediente | 1 | 200 g |
+| Té chai | ingrediente | 1 | 50 g |
+| Pan | ingrediente | 1 | 30 unidades |
+| Agua mineral botella | producto | 1 | 24 unidades |
 
-**Objetivo:** conocer qué artículos han sido adquiridos, cuántas compras se han realizado y cuáles son las cantidades totales compradas.
+**Interpretación:** en el período hay 3 compras (a Distribuidora Central, Lácteos del Valle y Comercial San Martín) que cubren 12 artículos. Este historial es el que usa la lista de compras de n8n para asociar cada artículo con el proveedor de su última compra.
 
-La consulta relaciona `Detalle_Compra`, `Compra` e `Item_Inventario`, incorporando las tablas `Producto` e `Ingrediente` para identificar cada artículo.
+### Consulta 4: mermas registradas
 
-Se utilizan funciones de agregación como `COUNT(DISTINCT)` y `SUM()`.
+Lista las mermas con artículo, cantidad, fecha, responsable y motivo.
 
-**Resultado obtenido:**
+| Artículo | Cantidad | Fecha | Responsable | Motivo |
+|---|---|---|---|---|
+| Café en grano | 50 g | 12-11-2026 17:00 | Camila Torres | Café derramado y no recuperable |
+| Leche | 100 ml | 12-11-2026 17:00 | Camila Torres | Leche vencida |
+| Chocolate en polvo | 30 g | 12-11-2026 17:00 | Camila Torres | Producto derramado |
+| Harina | 100 g | 12-11-2026 17:00 | Camila Torres | Harina contaminada |
 
-| Artículo | Tipo | Cantidad comprada | Unidad |
-|---|---|---:|---|
-| Leche | Ingrediente | 2.000 | ml |
-| Café en grano | Ingrediente | 500 | g |
-| Harina | Ingrediente | 500 | g |
-| Pollo | Ingrediente | 500 | g |
-| Chocolate en polvo | Ingrediente | 200 | g |
-| Cacao | Ingrediente | 200 | g |
+**Interpretación:** hay 4 mermas registradas por la dueña, con motivos de derrame, vencimiento y contaminación. Registrar el motivo permite distinguir pérdidas por manipulación de pérdidas por vencimiento, que es uno de los problemas identificados en el caso.
 
-La consulta obtuvo 12 registros, considerando también otros ingredientes y productos adquiridos.
+### Consulta 5: productos más vendidos
 
-**Interpretación:** los resultados permiten conocer las cantidades adquiridas para cada artículo y consultar su historial de compras. La leche presenta la mayor cantidad comprada, con 2.000 ml.
-
-Esta información facilita el seguimiento de las adquisiciones y la planificación de futuras compras.
-
-### 4.4 Mermas registradas por artículo
-
-**Objetivo:** identificar los artículos que presentan pérdidas de inventario, junto con la cantidad, fecha, usuario responsable y motivo de la merma.
-
-La consulta utiliza la tabla `Movimiento_Inventario`, relacionándola con `Item_Inventario`, `Producto`, `Ingrediente` y `Usuario`.
-
-Se utiliza una condición `WHERE` para considerar exclusivamente los movimientos cuyo tipo corresponde a una merma.
-
-**Resultado obtenido:**
-
-| Artículo | Cantidad | Unidad | Motivo |
-|---|---:|---|---|
-| Café en grano | 50 | g | Café derramado y no recuperable |
-| Leche | 100 | ml | Leche vencida |
-| Chocolate en polvo | 30 | g | Producto derramado |
-| Harina | 100 | g | Harina contaminada |
-
-Se identificaron cuatro registros de mermas.
-
-**Interpretación:** la consulta permite reconocer las pérdidas de inventario y sus causas. Esta información resulta útil para identificar problemas de manipulación, almacenamiento o vencimiento de ingredientes.
-
-Además, permite identificar al trabajador responsable del registro de cada movimiento.
-
-### 4.5 Ventas por producto
-
-**Objetivo:** identificar los productos que presentan mayores cantidades vendidas y conocer en cuántas ventas fueron incluidos.
-
-La consulta relaciona `Detalle_Venta`, `Producto` y `Venta`, utilizando `SUM()` para calcular las unidades vendidas y `COUNT(DISTINCT)` para contabilizar las ventas correspondientes.
-
-**Resultado obtenido:**
+Suma las unidades vendidas por producto y el número de ventas en que aparecen.
 
 | Producto | Unidades vendidas | Número de ventas |
-|---|---:|---:|
+|---|---|---|
 | Café latte | 5 | 2 |
 | Brownie | 3 | 1 |
 | Capuccino | 2 | 1 |
@@ -208,71 +112,50 @@ La consulta relaciona `Detalle_Venta`, `Producto` y `Venta`, utilizando `SUM()` 
 | Chocolate caliente | 1 | 1 |
 | Té chai latte | 1 | 1 |
 
-**Interpretación:** el café latte es el producto con mayor cantidad de unidades vendidas, alcanzando cinco unidades distribuidas en dos ventas.
+**Interpretación:** el café latte es el producto más vendido. Como su receta usa café en grano y leche, explica que esos dos ingredientes sean los de mayor consumo (consulta 2) y que el café en grano esté bajo el mínimo (consulta 1).
 
-Estos resultados permiten identificar los productos con mayor demanda y apoyar decisiones relacionadas con la planificación de la oferta y el abastecimiento de ingredientes.
+### Consulta 6: historial de movimientos de noviembre de 2026
 
-### 4.6 Historial de movimientos de inventario
+Lista todos los movimientos de inventario entre el 01-11-2026 y el 30-11-2026, con fecha, artículo, tipo, cantidad, unidad, usuario y motivo.
 
-**Objetivo:** consultar los movimientos de inventario realizados durante un período determinado, identificando el artículo, tipo de movimiento, cantidad, fecha, usuario responsable y motivo.
+**Resultado:** 45 movimientos: 27 entradas (stock inicial y compras), 14 salidas (consumo asociado a ventas) y 4 mermas.
 
-La consulta relaciona `Movimiento_Inventario`, `Item_Inventario`, `Producto`, `Ingrediente` y `Usuario`.
+**Interpretación:** la consulta cumple RF11: permite revisar, para un período elegido, qué entró, qué salió y qué se perdió, y quién lo registró. El rango de fechas se cambia en la condición `WHERE m.fecha_hora >= ... AND m.fecha_hora < ...`.
 
-Se utiliza una condición `WHERE` para establecer un período de consulta entre el 1 y el 30 de noviembre de 2026.
+## 4. Registro de venta con descuento automático (RF03)
 
-**Resultado obtenido:**
+`registrar_venta.sql` crea el procedimiento almacenado `registrar_venta(id_usuario, id_producto, cantidad)`. En una sola llamada:
 
-Se recuperaron 45 registros correspondientes a movimientos de inventario del período consultado.
+1. Valida que el usuario sea trabajador de barra o la dueña (actores y RNF01).
+2. Valida que la cantidad sea mayor que 0, que el producto exista y que haya stock suficiente.
+3. Registra la venta en `Venta` y `Detalle_Venta`.
+4. Calcula los ingredientes usados según la receta (`Configuracion_Producto` × cantidad vendida) y los guarda en `Detalle_Venta_Ingrediente`.
+5. Registra una `salida` en `Movimiento_Inventario` por cada ítem afectado.
+6. Descuenta el `stock_actual` en `Item_Inventario`, tanto de los ingredientes de la receta como de los productos que se venden directamente (por ejemplo, agua mineral).
 
-Entre los movimientos identificados se encuentran:
+Todo se ejecuta en una transacción: si una validación o instrucción falla, no se guarda ningún cambio (RNF05).
 
-- Entradas de inventario asociadas a compras y stock inicial.
-- Salidas relacionadas con el consumo de ingredientes y productos.
-- Mermas ocasionadas por pérdidas o deterioro de artículos.
+**Supuesto:** la unidad de la receta es la misma unidad base del ingrediente, como ocurre en `seed.sql`. Si en el futuro se usaran unidades distintas, haría falta una tabla de conversión.
 
-**Interpretación:** esta consulta permite mantener trazabilidad sobre los movimientos de inventario, facilitando la identificación de cuándo se realizó una operación, qué artículo fue afectado y quién fue responsable de registrarla.
+### 4.1 Demostración incluida en el script
 
-También permite revisar el historial de movimientos modificando las fechas establecidas en la condición `WHERE`.
+1. `CALL registrar_venta(2, 1, 2);`: Valentina Rojas (barra) vende 2 café latte.
+2. `CALL registrar_venta(2, 8, 1);`: Valentina vende 1 agua mineral (venta directa de producto).
 
-## 5. Ejecución y validación de los archivos SQL
+| Artículo | Stock antes | Stock después |
+|---|---|---|
+| Café en grano | 1306 g | 1270 g |
+| Leche | 5200 ml | 4800 ml |
+| Vaso desechable | 90 | 88 |
+| Tapa de vaso | 93 | 91 |
+| Agua mineral botella | 24 | 23 |
 
-Los tres archivos fueron ejecutados en MySQL Workbench utilizando el motor MySQL 8.0.
+La venta de café latte genera automáticamente 4 filas en `Detalle_Venta_Ingrediente` (36 g de café, 400 ml de leche, 2 vasos y 2 tapas) y las salidas correspondientes en `Movimiento_Inventario`.
 
-El procedimiento de ejecución es el siguiente:
 
-1. Ejecutar `schema.sql` para crear la base de datos y sus 14 tablas.
-2. Ejecutar `seed.sql` para incorporar los registros de prueba.
-3. Ejecutar `consultas.sql` para obtener los resultados de las seis consultas de negocio.
+### 4.2 Limitaciones
 
-La validación se realizó mediante la revisión de los mensajes de ejecución de MySQL Workbench y los resultados obtenidos en cada consulta.
+- El procedimiento registra un producto por llamada, una venta con varios productos requiere varias llamadas.
+- Por la implementación en base de datos de RF03, trabajadores deben de registrar ventas desde el celular (por ejemplo, un bot de Telegram conectado vía n8n).
+- Los procedimientos almacenados requieren MySQL y algunos servicios compatibles con MySQL, como TiDB Cloud, no los soportan.
 
-Se comprobó que las tablas fueron creadas correctamente, que los registros fueron incorporados y que las consultas devolvieron resultados coherentes con los datos almacenados.
-
-## 6. Aporte de la implementación SQL al sistema de información
-
-La implementación SQL permite transformar el modelo de datos del proyecto en una base de datos funcional para Mass Cafe SPA.
-
-Su principal aporte consiste en centralizar la información de las operaciones del negocio y permitir obtener información útil para la toma de decisiones.
-
-En particular, las consultas desarrolladas permiten:
-
-- Identificar necesidades de reposición de inventario.
-- Reconocer los ingredientes de mayor consumo.
-- Consultar las cantidades adquiridas a proveedores.
-- Identificar y controlar las mermas.
-- Analizar las unidades vendidas por producto.
-- Mantener trazabilidad de los movimientos de inventario.
-
-De esta manera, la base de datos constituye el soporte de información necesario para la gestión de los procesos de la cafetería y complementa el diseño del sistema de información desarrollado en el proyecto.
-
-## 7. Archivos asociados
-
-Los archivos SQL que respaldan esta implementación son:
-
-| Archivo | Contenido |
-|---|---|
-| `schema.sql` | Creación de la base de datos, tablas, claves y restricciones. |
-| `seed.sql` | Datos sintéticos para poblar las tablas. |
-| `consultas.sql` | Seis consultas SQL orientadas a la gestión del negocio. |
-
-Los tres archivos se encuentran disponibles en el repositorio GitHub del proyecto y permiten reproducir la implementación y los resultados presentados en esta documentación.
