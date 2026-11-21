@@ -21,6 +21,9 @@ Durante esta entrega se desarrollaron los siguientes aspectos:
 - Documentación y organización de los archivos del proyecto.
 
 ## 5. Documentación del proyecto
+### Informe del proyecto
+- [Informe final – Entrega 2 (Word)](./Docs/ICN292_P100_E2_Lobos_Pina_Pino_Sanchez.docx)
+
 ### Documentos
 - [00-caso-pyme.md](./Docs/00-caso-pyme.md)
 - [01-requerimientos.md](./Docs/01-requerimientos.md)
@@ -28,15 +31,18 @@ Durante esta entrega se desarrollaron los siguientes aspectos:
 - [03-modelo-datos.md](./Docs/03-modelo-datos.md)
 - [04-sql-consultas.md](./Docs/04-sql-consultas.md)
 - [05-automatizacion-n8n.md](./Docs/05-automatizacion-n8n.md)
+
 ### Diagramas
 - [BPMN to-be actualizado.bpm](./Docs/BPMN%20to-be%20actualizado.bpm)
 - [BPMN en actualizado.png](./Docs/BPMN%20en%20actualizado.png)
 - [Modelo-Entidad-Relacion.drawio](./Docs/Modelo-Entidad-Relacion.drawio)
 - [Modelo-Entidad-Relacion.png](./Docs/Modelo-Entidad-Relacion.png)
+
 ### Archivos SQL
 - [schema.sql](./Docs/schema.sql)
 - [seed.sql](./Docs/seed.sql)
 - [consultas.sql](./Docs/consultas.sql)
+
 ### Automatizaciones
 - [flujo1_alerta_reposicion.json](./Docs/flujo1_alerta_reposicion.json)
 - [flujo2_lista_compras.json](./Docs/flujo2_lista_compras.json)
@@ -51,6 +57,6 @@ Durante esta entrega se desarrollaron los siguientes aspectos:
 
 ## 7. Integrantes del equipo
 - Joaquín Lobos
-- Adán Piña
 - Javiera Pino
+- Adán Piña
 - Tomás Sánchez
